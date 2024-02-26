@@ -1,0 +1,22 @@
+syntax = "proto3";
+package converter;
+option go_package = "converter/converter";
+service Greeter {
+  rpc ConvertCurrency (ConvertRequest) returns (ConvertResponse);
+  
+}
+
+message ConvertRequest {
+  double amount = 1;
+  string fromCurrency = 2;
+  string toCurrency = 3;
+
+}
+
+message ConvertResponse {
+  double amount = 1;
+}
+
+
+
+// protoc -Iconverter --go_out=.  --go_opt=module=converter --go-grpc_out=. --go-grpc_opt=module=converter converter/converter.proto
