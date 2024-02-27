@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	pb "converter/converter"
+	"database/sql"
 	"log"
 	"net"
+
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -14,7 +15,7 @@ import (
 
 
 type Server struct {
-	pb.GreeterServer
+	pb.ConverterServer
 	db *sql.DB
 }
 
@@ -30,7 +31,7 @@ func main() {
 		log.Fatalf("Failed to listen on port 9000: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterGreeterServer(grpcServer, &Server{db : db})
+	pb.RegisterConverterServer(grpcServer, &Server{db : db})
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)
 	}
@@ -44,15 +45,18 @@ func (s *Server) ConvertCurrency(ctx context.Context, req *pb.ConvertRequest) (*
 	var toValue float64
 
 	err := s.db.QueryRow("SELECT conversion_value FROM currency_table WHERE currency = $1", fromCurrency).Scan(&fromValue)
-	if err == nil {
-		return nil, status.Errorf(codes.Unavailable, "Conversion value for %s is not available", fromCurrency)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Conversion value for %s is not available", fromCurrency)
 	}
+
 	err = s.db.QueryRow("SELECT conversion_value FROM currency_table WHERE currency = $1", toCurrency).Scan(&toValue)
-	if err == nil {
-		return nil, status.Errorf(codes.Unavailable, "Conversion value for %s is not available", toCurrency)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Conversion value for %s is not available", toCurrency)
 	}
 
 	convertedAmount := amount * fromValue / toValue
 	return &pb.ConvertResponse{Amount: convertedAmount}, nil
 }
+
+
 

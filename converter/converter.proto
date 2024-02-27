@@ -1,7 +1,7 @@
 syntax = "proto3";
 package converter;
 option go_package = "converter/converter";
-service Greeter {
+service Converter {
   rpc ConvertCurrency (ConvertRequest) returns (ConvertResponse);
   
 }
